@@ -1,0 +1,26 @@
+# mode can be mysql or observer
+mode: mysql
+mysql:
+  uri: jdbc:mysql://mysql2.vagrant.dev/failover
+  user: failover
+  password: failover
+  tracking_table: failover
+# if it takes more than this amount of time for the tracker
+# to replicate over, consider the current active master dead
+# and fail over
+  tracking_max_wait_secs: 60
+
+# poll the tracking table every #{tracking_poll_secs} for the
+# replication tracker
+  tracking_poll_interval_secs: 5
+
+zookeeper:
+  hosts:
+  - zk1.vagrant.dev:2181
+  chroot: /dev/app/mysql_failover
+
+# server_id needs to be unique amongst all watchers as it is used to determine
+# who is active and who is passive.  It can be any String or Integer
+  server_id: mysql2.vagrant.dev
+  active_master_id_znode: /active_master_id
+  state_znode: /state
