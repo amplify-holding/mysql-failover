@@ -26,16 +26,16 @@ user_options[:env] = (ENV['ENV'] || '').downcase
 user_options[:sf_sandbox] = user_options[:env] == 'dev'
 
 
-WATCHER = case settings.mode
+WATCHDOG = case settings.mode
 when "mysql"
-  Amplify::Failover::MySQL::MasterWatcher.new(settings.mysql, settings.zookeeper, logger: @logger)
+  Amplify::Failover::MySQLWatchdog.new(settings.mysql, settings.zookeeper, logger: @logger)
 end
 
-WATCHER.background!
+WATCHDOG.background!
 
 get '/status' do
   status = {
-    status: (WATCHER.running? ? 'ok' : 'ko'),
+    status: (WATCHDOG.running? ? 'ok' : 'ko'),
     version: VERSION_INFO,
 #    worker: WORKER.status
   }
@@ -49,5 +49,5 @@ get '/ping' do
 end
 
 get '/start' do
-  WATCHER.background! if WATCHER.status != :running
+  WATCHDOG.background! if WATCHDOG.status != :running
 end

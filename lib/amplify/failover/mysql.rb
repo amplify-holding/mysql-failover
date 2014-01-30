@@ -5,9 +5,8 @@ require 'jdbc/mysql'
 
 module Amplify
 module Failover
-module MySQL
+class MySQLWatchdog
 
-class MasterWatcher
   attr_reader :status, :active_master_id, :failover_state
 
   def initialize ( mysql_cfg, zk_cfg, misc_cfg = {})
@@ -35,7 +34,7 @@ class MasterWatcher
       mysql_read_only false
       mysql_poll_for_tracker meta
       set_client_data
-      @logger.info "Now in active mode."
+      @logger.info "Now in active mode." if state == Amplify::Failover::COMPLETE
     end
   end
 
@@ -64,6 +63,7 @@ class MasterWatcher
     lock = @zk.exclusive_locker('migrations_running')
 
     unless lock.lock(wait: false)
+      @logger.info "Another node is running database migrations.  Skipping."
       return
     end
 
@@ -321,7 +321,6 @@ class MasterWatcher
     value.is_a?(String) ? value : value.to_s
   end
 
-end
 end
 end
 end
