@@ -6,6 +6,7 @@ module Amplify
     # states
     TRANSITION = 'transitioning'
     COMPLETE   = 'complete'
+    ERROR      = 'complete'
     # Your code goes here...
   end
 end

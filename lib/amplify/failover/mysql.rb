@@ -2,6 +2,7 @@ require 'sequel'
 require 'logger'
 require 'jdbc/mysql'
 
+
 module Amplify
 module Failover
 module MySQL
@@ -15,9 +16,10 @@ class MasterWatcher
     @watcher_server_id      = normalize_server_id(zk_cfg[:server_id])
     @active_master_id_znode = zk_cfg[:active_master_id_znode] || '/active_master_id'
     @state_znode            = zk_cfg[:state_znode]            || '/state'
-    @tracking_table         = mysql_cfg['tracking_table']     || 'failover'
     @tracking_max_wait_secs = mysql_cfg['tracking_max_wait_secs'] || 600
     @tracking_poll_interval_secs = mysql_cfg['tracking_poll_interval_secs'] || 5
+    @client_data            = mysql_cfg['client_data']
+    @client_data_znode      = zk_cfg['client_data_znode']
 
     # https://github.com/zk-ruby/zk/wiki/Events
     # use a Queue to coordinate between threads
@@ -25,6 +27,24 @@ class MasterWatcher
 
     zk_connect zk_cfg
     mysql_connect mysql_cfg
+  end
+
+   def step_up ( meta )
+    @logger.info "This server will become the active master."
+    state_change do |state|
+      mysql_read_only false
+      mysql_poll_for_tracker meta
+      set_client_data
+      @logger.info "Now in active mode."
+    end
+  end
+
+  def step_down ( meta )
+    @logger.info "This server will become the passive master."
+    mysql_read_only
+    mysql_kill_connections
+    mysql_insert_tracker meta
+    @logger.info "Now in passive mode."
   end
 
   def mysql_connect ( mysql_cfg )
@@ -36,15 +56,24 @@ class MasterWatcher
                          sql_log_level:  :debug,
                          logger:         @logger )
 
-    create_tracking_table
+    run_sequel_migrations
   end
 
-  def create_tracking_table
-    @db.create_table? @tracking_table do
-      primary_key :id
-      column      :created_at, 'TIMESTAMP', :null => false
-      Bignum      :version, :null => false
-      DateTime    :mtime,   :null => false
+  def run_sequel_migrations
+    # make sure only one node is running these
+    lock = @zk.exclusive_locker('migrations_running')
+
+    unless lock.lock(wait: false)
+      return
+    end
+
+    begin
+      Sequel.extension :migration
+      Sequel::Migrator.run(@db, 'db/migrate') unless Sequel::Migrator.is_current?(@db, 'db/migrate')
+    rescue => e
+      @logger.error "Error running migrations: #{e}"
+    ensure
+      lock.unlock
     end
   end
 
@@ -149,29 +178,31 @@ class MasterWatcher
     end
   end
 
-  def step_up ( meta )
-    @logger.info "This server will become the active master."
-    set_failover_state Amplify::Failover::TRANSITION
-    mysql_read_only false
-    mysql_poll_for_tracker meta
-    set_failover_state Amplify::Failover::COMPLETE
-    @logger.info "Now in active mode."
-  end
-
-  def step_down ( meta )
-    @logger.info "This server will become the passive master."
-    mysql_read_only
-    mysql_kill_connections
-    mysql_insert_tracker meta
-    @logger.info "Now in passive mode."
-  end
-
   def failover_state
-    @zk.get(@state_znode).first
+    begin
+      @zk.get(@state_znode).first
+    rescue ZK::Exceptions::NoNode => e
+      # if this node doesn't exist, then failover has never occurred, so it should be
+      # in the complete state
+      Amplify::Failover::COMPLETE
+    end
   end
 
-  def set_failover_state (state)
-    @zk.create(@state_znode, state, or: :set, mode: :persistent)
+  def state_change
+    @zk.create(@state_znode, Amplify::Failover::TRANSITION, :or => :set, :mode => :persistent)
+    begin
+      yield failover_state
+      @zk.set(@state_znode, Amplify::Failover::COMPLETE)
+    rescue => e
+      @zk.set(@state_znode, Amplify::Failover::ERROR)
+      @logger.error "Failover failed: #{e.inspect}"
+      @logger.error e.backtrace.join("\n")
+    end
+  end
+
+  def set_client_data
+    client_data = JSON.generate(@client_data || {})
+    @zk.create(@client_data_znode, client_data, or: :set, mode: :persistent)
   end
 
   def mysql_poll_for_tracker ( meta )
@@ -195,13 +226,13 @@ class MasterWatcher
   end
 
   def mysql_tracking_token_found? (meta)
-    @db[@tracking_table.to_sym].
+    @db[:tracking].
       where(:version => meta.version).
       where('mtime >= ?', meta.mtime).count > 0
   end
 
   def mysql_insert_tracker (meta)
-    @db[@tracking_table.to_sym].insert( :created_at => Time.now,
+    @db[:tracking].insert( :created_at => Time.now,
                                         :version    => meta.version,
                                         :mtime      => Time.at(meta.mtime/1000) )
   end
@@ -282,10 +313,11 @@ class MasterWatcher
     end
 
     znode = watch_active_master_id_znode
-    @active_master_id = normalize_server_id znode[:value]
+    @active_master_id = znode.is_a?(Hash) ? normalize_server_id(znode[:value]) : nil
   end
 
   def normalize_server_id ( value )
+    return nil if value.nil?
     value.is_a?(String) ? value : value.to_s
   end
 
