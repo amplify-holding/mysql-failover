@@ -1,5 +1,7 @@
 # Amplify::Failover
 
+## Overview
+
 ## Usage
 
 To build
@@ -16,5 +18,5 @@ To specify the config file
 
 To specify the server port
 
-    ./go server[8888]
+    FAILOVER_CONFIG=config/myconfig.yaml ./go server[8888]
 
