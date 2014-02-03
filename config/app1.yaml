@@ -1,0 +1,23 @@
+# mode can be mysql or observer
+mode: application
+application:
+# Command to execute when the state_znode changes to the transitional state (failover in progress)
+# Typically, this would stop the running service in preparation for reconfiguration
+# when it enters the complete state
+  cmd_on_transition: tests/bin/test_app_ctl stop
+# Command to execute when the state_znode changes to the completed state (failover completed)
+# Normally, this would start or reconfigure the running service
+  cmd_on_complete: tests/bin/test_app_ctl start
+
+zookeeper:
+  hosts:
+  - zk1.vagrant.dev:2181
+  chroot: /dev/app/mysql_failover
+
+  active_master_id_znode: /active_master_id
+
+# client_data_znode is watched by the clients and when this value
+# changes, triggers a startup of the client service and signifies that
+# failover has been completed on the MySQL side.
+  client_data_znode: /client_data
+  state_znode: /state

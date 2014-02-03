@@ -12,13 +12,13 @@ class MySQLWatchdog
   def initialize ( mysql_cfg, zk_cfg, misc_cfg = {})
     @status                 = :starting
     @logger                 = misc_cfg[:logger] || Logger.new($stderr)
-    @watcher_server_id      = normalize_server_id(zk_cfg[:server_id])
-    @active_master_id_znode = zk_cfg[:active_master_id_znode] || '/active_master_id'
-    @state_znode            = zk_cfg[:state_znode]            || '/state'
+    @watcher_server_id      = normalize_server_id(zk_cfg['server_id'])
+    @active_master_id_znode = zk_cfg['active_master_id_znode']    || '/active_master_id'
+    @state_znode            = zk_cfg['state_znode']               || '/state'
+    @client_data_znode      = zk_cfg['client_data_znode']         || '/client_data'
     @tracking_max_wait_secs = mysql_cfg['tracking_max_wait_secs'] || 600
-    @tracking_poll_interval_secs = mysql_cfg['tracking_poll_interval_secs'] || 5
     @client_data            = mysql_cfg['client_data']
-    @client_data_znode      = zk_cfg['client_data_znode']
+    @tracking_poll_interval_secs = mysql_cfg['tracking_poll_interval_secs'] || 5
 
     # https://github.com/zk-ruby/zk/wiki/Events
     # use a Queue to coordinate between threads
@@ -34,7 +34,7 @@ class MySQLWatchdog
       mysql_read_only false
       mysql_poll_for_tracker meta
       set_client_data
-      @logger.info "Now in active mode." if state == Amplify::Failover::COMPLETE
+      @logger.info "Now in active mode." if state == Amplify::Failover::STATE_COMPLETE
     end
   end
 
@@ -163,7 +163,7 @@ class MySQLWatchdog
   def process_master_change ( new_active_server_id, meta )
     # do nothing if the value didn't actually change (for znode version changes)
     return if normalize_server_id(new_active_server_id) == active_master_id
-    if failover_state != Amplify::Failover::COMPLETE
+    if failover_state != Amplify::Failover::STATE_COMPLETE
       @logger.warn "Transition currently in progress.  Not processing second transition.  #{@active_master_id_znode} may be incorrect."
       return
     end
@@ -184,17 +184,17 @@ class MySQLWatchdog
     rescue ZK::Exceptions::NoNode => e
       # if this node doesn't exist, then failover has never occurred, so it should be
       # in the complete state
-      Amplify::Failover::COMPLETE
+      Amplify::Failover::STATE_COMPLETE
     end
   end
 
   def state_change
-    @zk.create(@state_znode, Amplify::Failover::TRANSITION, :or => :set, :mode => :persistent)
+    @zk.create(@state_znode, Amplify::Failover::STATE_TRANSITION, :or => :set, :mode => :persistent)
     begin
       yield failover_state
-      @zk.set(@state_znode, Amplify::Failover::COMPLETE)
+      @zk.set(@state_znode, Amplify::Failover::STATE_COMPLETE)
     rescue => e
-      @zk.set(@state_znode, Amplify::Failover::ERROR)
+      @zk.set(@state_znode, Amplify::Failover::STATE_ERROR)
       @logger.error "Failover failed: #{e.inspect}"
       @logger.error e.backtrace.join("\n")
     end

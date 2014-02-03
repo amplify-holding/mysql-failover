@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+PIDFILE="/tmp/test_app.pid"
+LOGFILE="/tmp/test_app.log"
+
+case $1 in
+  "start" )
+    nohup bundle exec `dirname $0`/test_app.rb >> $LOGFILE 2>&1 &
+    echo $! > "$PIDFILE"
+    ;;
+
+  "stop" )
+    if [[ -f $PIDFILE ]]; then
+      kill -0 $(cat $PIDFILE) && kill $(cat $PIDFILE)
+    else
+      exit 1
+    fi
+    ;;
+
+  "status" )
+    if [[ -f $PIDFILE ]]; then
+      kill -0 $(cat $PIDFILE)
+    else
+      exit 1
+    fi
+    ;;
+
+esac
+
+

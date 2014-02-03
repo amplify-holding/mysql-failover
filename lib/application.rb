@@ -29,6 +29,8 @@ user_options[:sf_sandbox] = user_options[:env] == 'dev'
 WATCHDOG = case settings.mode
 when "mysql"
   Amplify::Failover::MySQLWatchdog.new(settings.mysql, settings.zookeeper, logger: @logger)
+when "application"
+  Amplify::Failover::AppWatchdog.new(settings.application, settings.zookeeper, logger: @logger)
 end
 
 WATCHDOG.background!
