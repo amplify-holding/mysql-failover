@@ -5,13 +5,11 @@ require 'jdbc/mysql'
 
 module Amplify
 module Failover
-class MySQLWatchdog
+class MySQLWatchdog < Watchdog
 
   attr_reader :status, :active_master_id, :failover_state
 
   def initialize ( mysql_cfg, zk_cfg, misc_cfg = {})
-    @status                 = :starting
-    @logger                 = misc_cfg[:logger] || Logger.new($stderr)
     @watcher_server_id      = normalize_server_id(zk_cfg['server_id'])
     @active_master_id_znode = zk_cfg['active_master_id_znode']    || '/active_master_id'
     @state_znode            = zk_cfg['state_znode']               || '/state'
@@ -20,12 +18,10 @@ class MySQLWatchdog
     @client_data            = mysql_cfg['client_data']
     @tracking_poll_interval_secs = mysql_cfg['tracking_poll_interval_secs'] || 5
 
-    # https://github.com/zk-ruby/zk/wiki/Events
-    # use a Queue to coordinate between threads
-    @queue = Queue.new
+    super(zk_cfg, misc_cfg)
 
-    zk_connect zk_cfg
     mysql_connect mysql_cfg
+
   end
 
    def step_up ( meta )
@@ -77,68 +73,9 @@ class MySQLWatchdog
     end
   end
 
-# Public: Connect to ZooKeeper.  Set @zk instance variable to
-#         ZooKeeper connection
-#
-# zk_cfg - Hash of ZooKeeper configuration :
-#   'hosts'  => Array of hostname:port for ZooKeeper ensemble
-#   'chroot' => The ZK node to chroot to
-#
-# Examples
-#
-#   zk_connect({ 'hosts' => ['zk1.example.com:2181','zk2.example.com:2182'],
-#                'chroot' => '/my/znode' })
-#   # => ZK::Client
-#
-# Returns: ZK::Client object.
-#
-  def zk_connect ( zk_cfg )
-    ZK.logger = @logger
-    @zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
-  end
 
-# Public: Put this class into the background and execute the run method
-#
-# Examples
-#
-#   background!
-#
   def background!
-    Thread.new do
-      java.lang.Thread.currentThread.setName('mysql-master-watcher')
-      begin
-        @zk.reopen
-        run
-        @logger.info "Main thread running in background"
-      rescue => e
-        @logger.fatal 'Unrecoverable worker exception: ', e
-        @status = :stopped
-      end
-    end
-  end
-
-  def running?
-    @status == :running
-  end
-
-
-# Public: Start the main watcher loop
-#
-# Examples
-#
-#   run
-#
-  def run
-    @logger.info "Running"
-    @status = :running
-
-    register_self_with_zk
-    watch
-    loop do
-      queue_event = @queue.pop
-      process_queue_event(queue_event[:type], queue_event[:value], queue_event[:meta])
-    end
-    @status = :stopped
+    super 'mysql-master-watcher'
   end
 
   def process_queue_event ( type, value, meta )
