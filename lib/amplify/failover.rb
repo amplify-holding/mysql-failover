@@ -1,4 +1,5 @@
 require "amplify/failover/version"
+require "amplify/failover/watchdog"
 require "amplify/failover/mysql"
 require "amplify/failover/app"
 
