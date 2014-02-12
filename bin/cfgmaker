@@ -1,0 +1,106 @@
+#!/usr/bin/env ruby
+
+######################
+# This script takes an erb template and replaces the values
+# with parameters stored in a ZooKeeper ZNode. Its purpose is to
+# build config files to be included in overrides upon application
+# server startup.
+#
+# The parameters in the client_data_znode ZNode must be in JSON 
+# format and are passed into the ERB template as local variables.
+# Example client data 
+# { "mysql_host": "mysql1.example.com",
+#   "mysql_port": 3306 }
+#
+# The above example exposes two variables, mysql_host and mysql_port 
+# which can be referenced in the erb template file by name, e.g.:
+#
+#   connection_string = "mysql://<%= mysql_host %>:<%= mysql_port %>"
+#
+# The config file passed in should be the application style
+# config format and should be in this format (YAML):
+#
+# zookeeper:
+#   hosts:
+#   - zk1.example.com:2181
+#   - zk2.example.com:2181
+#   - zk3.example.com:2181
+#   chroot: /dev/app/mysql_failover
+#   client_data_znode: /client_data
+
+def eval_template ( template, namespace )
+  ERB.new(template).result(namespace.instance_eval { binding })
+end
+
+require 'rubygems'
+require 'zk'
+require 'erb'
+require 'optparse'
+require 'yaml'
+require 'json'
+require 'logger'
+require 'ostruct'
+
+config = {}
+
+options = {
+  erb_file: nil,
+  debug: false
+}
+
+
+opts = OptionParser.new do |o|
+  o.banner = "Usage: #{$0} -c CONFIGFILE [options]"
+
+  o.on("-c", "--config FILE", "config file with zookeeper connection info") do |v|
+    raise ArgumentError, "config file #{v} does not exist" unless File.file?(v)
+    config = YAML.load_file(v)
+  end
+
+  o.on("-e", "--erb FILE", "ERB Template to use") do |v|
+#    raise ArgumentError, "ERB file #{v} does not exist" unless File.file?(v)
+    options[:erb_file] = v
+  end
+
+  o.on("-d", "--debug", "Debug output") do |v|
+    options[:debug] = true
+  end
+
+  o.on("-o", "--output FILE", "output file") do |v|
+    options[:output_file] = v
+  end
+
+  o.on("-h", "--help", "help") do
+    puts o
+    exit
+  end
+end
+
+opts.parse!
+
+logger = Logger.new($stderr)
+logger.level = options[:debug] ? Logger::DEBUG : Logger::INFO
+
+zk_cfg = config['zookeeper']
+ZK.logger = logger
+zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
+
+begin
+  client_data_json = zk.get(zk_cfg['client_data_znode']).first
+rescue => e
+  logger.fatal e
+  abort
+end
+
+logger.debug "Found client_data: #{client_data_json}"
+client_data = JSON.parse(client_data_json)
+
+namespace = OpenStruct.new(client_data)
+template = IO.read(options[:erb_file])
+evaluated_template = eval_template(template, namespace)
+
+if options[:output_file]
+  File.open(options[:output_file], 'w') {|f| f.write(evaluated_template) }
+else
+  puts evaluated_template
+end
