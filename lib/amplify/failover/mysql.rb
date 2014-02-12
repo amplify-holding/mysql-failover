@@ -214,7 +214,7 @@ class MySQLWatchdog < Watchdog
 #
   def register_self_with_zk
     @zk.create('/masters', ignore: :node_exists)
-    @zk.create("/masters/node-#{@watcher_server_id}", mode: :ephemeral)
+    @zk.create("/masters/node-", @watcher_server_id, mode: :ephemeral_sequential)
   end
 
   # presently active or passive?
