@@ -2,6 +2,7 @@ require "amplify/failover/version"
 require "amplify/failover/watchdog"
 require "amplify/failover/mysql"
 require "amplify/failover/app"
+require "amplify/failover/coordinator"
 
 module Amplify
   module Failover

@@ -5,6 +5,56 @@ require 'rubygems'
 require 'yaml'
 require 'gli'
 require 'pp'
+require 'zk'
 require 'logger'
+require 'amplify/failover'
 
+include GLI::App
 
+program_desc 'Fail over a database'
+
+version Amplify::Failover::VERSION
+
+desc 'Config file with zookeeper connection information'
+arg_name 'file'
+flag [:c,:config]
+
+desc 'Enable debug logging'
+switch [:d,:debug]
+
+desc 'List available fail over targets'
+command :list do |c|
+  c.action do |global_options,options,args|
+    puts @coordinator.active_master_pretty
+  end
+end
+
+desc 'Fail over to another database'
+arg_name 'server_id'
+command :failover do |c|
+  c.action do |global_options,options,args|
+    server_id = args.first
+    help_now! "Must specify valid fail over target.  Call `#{$0} list` to show." unless @coordinator.server_id_exists? server_id
+
+    unless @coordinator.trigger_failover! server_id
+      exit 1
+    end
+  end
+end
+
+pre do |global_options,command,options,args|
+  help_now!('config is required') unless global_options[:config]
+  config = YAML.load_file global_options[:config]
+
+  @logger = Logger.new($stderr)
+  @logger.level = global_options[:debug] ? Logger::DEBUG : Logger::INFO
+
+  @active_master_id = nil
+  @coordinator = Amplify::Failover::Coordinator.new(config['zookeeper'], logger: @logger)
+
+  exit_now! "There are no available masters" unless @coordinator.connected_master_ids
+
+  true
+end
+
+exit run(ARGV)
