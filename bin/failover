@@ -37,7 +37,7 @@ command :failover do |c|
     help_now! "Must specify valid fail over target.  Call `#{$0} list` to show." unless @coordinator.server_id_exists? server_id
 
     unless @coordinator.trigger_failover! server_id
-      exit 1
+      exit_now! "Fail over failed."
     end
   end
 end
