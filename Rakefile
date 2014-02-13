@@ -23,3 +23,21 @@ desc 'build WAR'
 task :build => [:war]
 
 task :default => [:server]
+
+desc 'Bump the patch version in version.rb'
+task :bump, [:version] do |t, args|
+  raise 'Which version?' unless args[:version]
+  fn = "lib/amplify/failover/version.rb"
+  version_regex = /(\s*)VERSION\s*=\s*["'](\d+)\.(\d+)\.(\d+)["']/
+  contents = File.open(fn) { |f| f.readlines }
+
+  output = contents.map do |line|
+    if line =~ version_regex
+      line.gsub(version_regex, sprintf('\1VERSION = "\2.\3.%s"', args[:version]))
+    else
+      line
+    end
+  end
+  File.open(fn, 'w') { |f| f.write(output.join) }
+  puts "Bumped patch version to #{args[:version]}"
+end
