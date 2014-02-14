@@ -18,6 +18,12 @@ class Coordinator
     @logger = misc_cfg[:logger] || Logger.new($stderr)
     ZK.logger = @logger
     @zk = ZK.new(@zk_cfg['hosts'].join(','), chroot: @zk_cfg['chroot'])
+
+    @zk.on_expired_session do
+      @logger.info "ZK Session expired.  Reconnecting and resetting watches."
+      @zk.reopen
+      watch
+    end
   end
 
 
@@ -79,7 +85,6 @@ class Coordinator
   end
 
   def wait_for_failover_complete
-
     watch
     loop do
       queue_event = @queue.pop

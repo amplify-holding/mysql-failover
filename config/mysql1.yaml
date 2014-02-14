@@ -35,6 +35,8 @@ mysql:
 zookeeper:
   hosts:
   - zk1.vagrant.dev:2181
+  - zk2.vagrant.dev:2181
+  - zk3.vagrant.dev:2181
   chroot: /dev/app/mysql_failover
 
 # server_id needs to be unique amongst all watchers as it is used to determine
