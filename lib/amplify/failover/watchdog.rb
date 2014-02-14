@@ -31,6 +31,11 @@ class Watchdog
   def zk_connect ( zk_cfg )
     ZK.logger = @logger
     @zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
+    @zk.on_expired_session do
+      @logger.info "ZK Session expired.  Reconnecting and resetting watches."
+      @zk.reopen
+      watch
+    end
   end
 
 # Public: Put this class into the background and execute the run method

@@ -12,6 +12,8 @@ application:
 zookeeper:
   hosts:
   - zk1.vagrant.dev:2181
+  - zk2.vagrant.dev:2181
+  - zk3.vagrant.dev:2181
   chroot: /dev/app/mysql_failover
 
   active_master_id_znode: /active_master_id
