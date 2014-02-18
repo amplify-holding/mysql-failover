@@ -170,8 +170,8 @@ class MySQLWatchdog < Watchdog
 
   def mysql_insert_tracker (meta)
     @db[:tracking].insert( :created_at => Time.now,
-                                        :version    => meta.version,
-                                        :mtime      => Time.at(meta.mtime/1000) )
+                           :version    => meta.version,
+                           :mtime      => meta.mtime )
   end
 
   # kill off any connections except for self and slave processes
