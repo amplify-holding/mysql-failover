@@ -34,6 +34,7 @@ class Watchdog
     @zk.on_expired_session do
       @logger.info "ZK Session expired.  Reconnecting and resetting watches."
       @zk.reopen
+      register_self_with_zk
       watch
     end
   end
@@ -76,12 +77,17 @@ class Watchdog
     @status = :running
 
     register_self_with_zk
+    register_callbacks
     watch
     loop do
       queue_event = @queue.pop
       process_queue_event(queue_event[:type], queue_event[:value], queue_event[:meta])
     end
     @status = :stopped
+  end
+
+  def register_callbacks
+    #implement in a subclass
   end
 
   def watch

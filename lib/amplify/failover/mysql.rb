@@ -24,7 +24,7 @@ class MySQLWatchdog < Watchdog
 
   end
 
-   def step_up ( meta )
+  def step_up ( meta )
     @logger.info "This server will become the active master."
     state_change do |state|
       mysql_read_only false
@@ -213,6 +213,7 @@ class MySQLWatchdog < Watchdog
 #   register_self_with_zk
 #
   def register_self_with_zk
+    super
     @zk.create('/masters', ignore: :node_exists)
     @zk.create("/masters/node-", @watcher_server_id, mode: :ephemeral_sequential)
   end
@@ -237,8 +238,7 @@ class MySQLWatchdog < Watchdog
     result
   end
 
-# Public: set watches and get initial values for watched znodes
-  def watch
+  def register_callbacks
     @zk_watch = @zk.register(@active_master_id_znode) do |event|
       znode = watch_active_master_id_znode
       if event.node_changed? || event.node_created?
@@ -248,7 +248,10 @@ class MySQLWatchdog < Watchdog
                      :meta  => znode[:meta] )
       end
     end
+  end
 
+# Public: set watches and get initial values for watched znodes
+  def watch
     znode = watch_active_master_id_znode
     @active_master_id = znode.is_a?(Hash) ? normalize_server_id(znode[:value]) : nil
   end
