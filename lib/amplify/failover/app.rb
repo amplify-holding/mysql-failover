@@ -86,8 +86,7 @@ class AppWatchdog < Watchdog
     result
   end
 
-# Public: set watches and get initial values for watched znodes
-  def watch
+  def register_callbacks
     @zk_watch = @zk.register(@state_znode) do |event|
       znode = watch_state_znode
       if event.node_changed? || event.node_created?
@@ -97,7 +96,10 @@ class AppWatchdog < Watchdog
                      :meta  => znode[:meta] )
       end
     end
+  end
 
+# Public: set watches and get initial values for watched znodes
+  def watch
     znode = watch_state_znode
   end
 
