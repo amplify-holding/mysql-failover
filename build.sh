@@ -26,4 +26,5 @@ bundle package --all
 bundle exec rake build
 
 [[ -d dist ]] || mkdir dist
-mv amplify-failover.war dist/amplify-failover-${BUILD_NUMBER}.war
+mv amplify-failover.war dist/failover-${BUILD_NUMBER}.war
+mv pkg/amplify-failover-${BUILD_NUMBER}.gem pkg/failover-${BUILD_NUMBER}.gem
