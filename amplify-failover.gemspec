@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'amplify/failover/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "amplify-failover"
+  spec.name          = "failover"
   spec.version       = Amplify::Failover::VERSION
   spec.authors       = ["Aaron Brown"]
   spec.email         = ["abrown@amplify.com"]
