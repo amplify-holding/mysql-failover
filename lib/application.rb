@@ -7,6 +7,7 @@ require 'zk'
 require 'pp'
 
 @logger = Amplify::SLF4J['amplify-failover']
+@logger.level = ::Logger::Severity::DEBUG
 
 config_filename = (ENV['FAILOVER_CONFIG'] || java.lang.System.getProperty('failover.config', 'config/failover.yaml'))
 
