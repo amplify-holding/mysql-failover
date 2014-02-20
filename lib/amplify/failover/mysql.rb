@@ -31,8 +31,8 @@ class MySQLWatchdog < Watchdog
       mysql_read_only false
       mysql_poll_for_tracker meta
       set_client_data
-      @logger.info "Now in active mode." if state == Amplify::Failover::STATE_COMPLETE
     end
+    @logger.info "Now in active mode." if failover_state == Amplify::Failover::STATE_COMPLETE
   end
 
   def step_down ( meta )
