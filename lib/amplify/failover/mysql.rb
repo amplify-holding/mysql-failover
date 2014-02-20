@@ -32,7 +32,6 @@ class MySQLWatchdog < Watchdog
       mysql_poll_for_tracker meta
       set_client_data
     end
-    @logger.info "Now in active mode." if failover_state == Amplify::Failover::STATE_COMPLETE
   end
 
   def step_down ( meta )
@@ -131,6 +130,7 @@ class MySQLWatchdog < Watchdog
     begin
       yield failover_state
       @zk.set(@state_znode, Amplify::Failover::STATE_COMPLETE)
+      @logger.info "Now in active mode."
     rescue => e
       @zk.set(@state_znode, Amplify::Failover::STATE_ERROR)
       @logger.error "Failover failed: #{e.inspect}"
