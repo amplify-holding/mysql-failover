@@ -74,8 +74,8 @@ class Coordinator
     end
 
     begin
-      @zk.create(@active_master_id_znode, server_id, or: :set)
       @logger.info "Failing over to #{server_id}..."
+      @zk.create(@active_master_id_znode, server_id, or: :set)
       wait_for_failover_complete
     ensure
       lock.unlock
