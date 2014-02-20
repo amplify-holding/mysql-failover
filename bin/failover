@@ -57,4 +57,4 @@ pre do |global_options,command,options,args|
   true
 end
 
-exit run(ARGV)
+run(ARGV)
