@@ -184,8 +184,10 @@ class MySQLWatchdog < Watchdog
                       where('id != CONNECTION_ID()').
                       exclude(:User => 'system user').all
 
-      @logger.debug "Killing connection #{row[:id]}"
-      connections.each { |row| @db["KILL #{row[:id]}"].update }
+      connections.each do |row|
+        @logger.debug "Killing connection #{row[:id]}"
+        @db["KILL #{row[:id]}"].update
+      end
     end
   end
 
