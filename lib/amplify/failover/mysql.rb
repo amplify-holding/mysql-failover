@@ -17,6 +17,7 @@ class MySQLWatchdog < Watchdog
     @tracking_max_wait_secs = mysql_cfg['tracking_max_wait_secs'] || 600
     @client_data            = mysql_cfg['client_data']
     @tracking_poll_interval_secs = mysql_cfg['tracking_poll_interval_secs'] || 5
+    @migrations_dir         = mysql_cfg['migrations_dir'] || 'db/migrate'
 
     super(zk_cfg, misc_cfg)
 
@@ -65,7 +66,7 @@ class MySQLWatchdog < Watchdog
 
     begin
       Sequel.extension :migration
-      Sequel::Migrator.run(@db, 'db/migrate') unless Sequel::Migrator.is_current?(@db, 'db/migrate')
+      Sequel::Migrator.run(@db, @migrations_dir) unless Sequel::Migrator.is_current?(@db, @migrations_dir)
     rescue => e
       @logger.error "Error running migrations: #{e}"
     ensure

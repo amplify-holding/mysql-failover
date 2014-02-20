@@ -13,6 +13,12 @@ mysql:
   uri: jdbc:mysql://mysql2.vagrant.dev/failover
   user: failover
   password: failover
+
+# migrations_dir is where all the migrations are stored
+# This is necessary in the where jruby is used and the migrations
+# are in a .war file to be extracted.
+  migrations_dir: db/migrate
+
 # if it takes more than this amount of time for the tracker
 # to replicate over, consider the current active master dead
 # and fail over
