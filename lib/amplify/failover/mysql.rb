@@ -7,7 +7,7 @@ module Amplify
 module Failover
 class MySQLWatchdog < Watchdog
 
-  attr_reader :status, :active_master_id, :failover_state
+  attr_reader :status, :active_master_id
 
   def initialize ( mysql_cfg, zk_cfg, misc_cfg = {})
     @watcher_server_id      = normalize_server_id(zk_cfg['server_id'])
@@ -100,7 +100,7 @@ class MySQLWatchdog < Watchdog
   def process_master_change ( new_active_server_id, meta )
     # do nothing if the value didn't actually change (for znode version changes)
     return if normalize_server_id(new_active_server_id) == active_master_id
-    if failover_state != Amplify::Failover::STATE_COMPLETE
+    if self.failover_state != Amplify::Failover::STATE_COMPLETE
       @logger.warn "Transition currently in progress.  Not processing second transition.  #{@active_master_id_znode} may be incorrect."
       return
     end
@@ -128,7 +128,7 @@ class MySQLWatchdog < Watchdog
   def state_change
     @zk.create(@state_znode, Amplify::Failover::STATE_TRANSITION, :or => :set, :mode => :persistent)
     begin
-      yield failover_state
+      yield self.failover_state
       @zk.set(@state_znode, Amplify::Failover::STATE_COMPLETE)
       @logger.info "Now in active mode."
     rescue => e
