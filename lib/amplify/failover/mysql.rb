@@ -27,6 +27,14 @@ class MySQLWatchdog < Watchdog
 
   def step_up ( meta )
     @logger.info "This server will become the active master."
+
+    state = self.failover_state
+    if state != Amplify::Failover::STATE_COMPLETE
+      @logger.warn "Transition currently in progress.  Not processing second transition.  #{@active_master_id_znode} may be incorrect."
+      @logger.debug "Current state: #{state}"
+      return false
+    end
+
     state_change do |state|
       mysql_read_only false
       mysql_poll_for_tracker meta
@@ -100,12 +108,6 @@ class MySQLWatchdog < Watchdog
   def process_master_change ( new_active_server_id, meta )
     # do nothing if the value didn't actually change (for znode version changes)
     return if normalize_server_id(new_active_server_id) == active_master_id
-    state = self.failover_state 
-    if state != Amplify::Failover::STATE_COMPLETE
-      @logger.warn "Transition currently in progress.  Not processing second transition.  #{@active_master_id_znode} may be incorrect."
-      @logger.debug "Current state: #{state}"
-      return
-    end
 
     if step_up?(new_active_server_id)
       @active_master_id = new_active_server_id
