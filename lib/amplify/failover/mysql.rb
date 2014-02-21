@@ -100,8 +100,10 @@ class MySQLWatchdog < Watchdog
   def process_master_change ( new_active_server_id, meta )
     # do nothing if the value didn't actually change (for znode version changes)
     return if normalize_server_id(new_active_server_id) == active_master_id
-    if self.failover_state != Amplify::Failover::STATE_COMPLETE
+    state = self.failover_state 
+    if state != Amplify::Failover::STATE_COMPLETE
       @logger.warn "Transition currently in progress.  Not processing second transition.  #{@active_master_id_znode} may be incorrect."
+      @logger.debug "Current state: #{state}"
       return
     end
 
