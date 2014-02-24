@@ -2,7 +2,7 @@
 
 ## Overview
 
-![Architecture Diagram](/doc/img/mysql_zk_failover.png)
+![Architecture Diagram](https://bitbucket.org/syseng/amplify-failover/raw/master/doc/img/mysql_zk_failover.png)
 
 ## Running it
 
