@@ -190,7 +190,11 @@ class MySQLWatchdog < Watchdog
 
       connections.each do |row|
         @logger.debug "Killing connection #{row[:id]}"
-        @db["KILL #{row[:id]}"].update
+        begin
+          @db["KILL #{row[:id]}"].update
+        rescue => e
+          @logger.warn e.inspect
+        end
       end
     end
   end
