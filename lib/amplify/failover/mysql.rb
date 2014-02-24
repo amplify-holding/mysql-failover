@@ -45,7 +45,7 @@ class MySQLWatchdog < Watchdog
   def step_down ( meta )
     @logger.info "This server will become the passive master."
     mysql_read_only
-    mysql_kill_connections
+    #mysql_kill_connections
     mysql_insert_tracker meta
     @logger.info "Now in passive mode."
   end
