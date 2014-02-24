@@ -8,7 +8,7 @@ mysql:
 # * SUPER (for controlling slave threads and setting read_only)
 #
 # GRANT ALL PRIVILEGES ON #{db}.* TO '#{user}'@'%' IDENTIFIED BY '#{password'};
-# GRANT SUPER ON *.* TO '#{user}'@'%';
+# GRANT SUPER,PROCESS ON *.* TO '#{user}'@'%';
 #
   uri: jdbc:mysql://mysql1.vagrant.dev/failover
   user: failover
