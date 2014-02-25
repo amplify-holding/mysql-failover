@@ -26,6 +26,7 @@ class MySQLWatchdog < Watchdog
   end
 
   def step_up ( meta )
+    @graphite.send_metrics( "#{@watcher_server_id}.step_up" => 1)
     @logger.info "This server will become the active master."
 
     state = self.failover_state
@@ -43,6 +44,7 @@ class MySQLWatchdog < Watchdog
   end
 
   def step_down ( meta )
+    @graphite.send_metrics( "#{@watcher_server_id}.step_down" => 1)
     @logger.info "This server will become the passive master."
     mysql_read_only
     #mysql_kill_connections
@@ -73,7 +75,11 @@ class MySQLWatchdog < Watchdog
 
     begin
       Sequel.extension :migration
-      Sequel::Migrator.run(@db, @migrations_dir) unless Sequel::Migrator.is_current?(@db, @migrations_dir)
+
+      unless Sequel::Migrator.is_current?(@db, @migrations_dir)
+        Sequel::Migrator.run(@db, @migrations_dir) 
+        @graphite.send_metrics( "#{@watcher_server_id}.migrations_run" => 1 )
+      end
     rescue => e
       @logger.error "Error running migrations: #{e}"
     ensure
@@ -111,11 +117,15 @@ class MySQLWatchdog < Watchdog
 
     if step_up?(new_active_server_id)
       @active_master_id = new_active_server_id
-      step_up(meta)
+      @graphite.send_timer("#{@watcher_server_id}.step_up_secs") do
+        step_up(meta)
+      end
 
     elsif step_down?(new_active_server_id)
       @active_master_id = new_active_server_id
-      step_down(meta)
+      @graphite.send_timer("#{@watcher_server_id}.step_down_secs") do
+        step_down(meta)
+      end
     end
   end
 
@@ -131,12 +141,15 @@ class MySQLWatchdog < Watchdog
 
   def state_change
     @zk.create(@state_znode, Amplify::Failover::STATE_TRANSITION, :or => :set, :mode => :persistent)
+    @graphite.send_metrics( 'state_transition' => 1)
     begin
       yield self.failover_state
       @zk.set(@state_znode, Amplify::Failover::STATE_COMPLETE)
+      @graphite.send_metrics( 'state_complete' => 1)
       @logger.info "Now in active mode."
     rescue => e
       @zk.set(@state_znode, Amplify::Failover::STATE_ERROR)
+      @graphite.send_metrics( 'state_error' => 1)
       @logger.error "Failover failed: #{e.inspect}"
       @logger.error e.backtrace.join("\n")
     end
