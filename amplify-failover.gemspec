@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  %w{zk sequel gli sinatra sinatra-contrib}.each { |gem| spec.add_dependency gem }
+  %w{zk sequel gli sinatra sinatra-contrib simple-graphite}.each { |gem| spec.add_dependency gem }
   spec.add_dependency 'amplify-slf4j', '~> 0.0.4'
 
   # this thing needs to run under both jruby and MRI, if possible

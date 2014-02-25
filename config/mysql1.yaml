@@ -47,7 +47,7 @@ zookeeper:
 
 # server_id needs to be unique amongst all watchers as it is used to determine
 # who is active and who is passive.  It can be any String or Integer
-  server_id: mysql1.vagrant.dev
+  server_id: mysql1
   active_master_id_znode: /active_master_id
 
 # client_data_znode is watched by the clients and when this value
@@ -56,3 +56,8 @@ zookeeper:
 # the contents of mysql.client_data above.
   client_data_znode: /client_data
   state_znode: /state
+
+graphite:
+  host: tigh.borg.lan
+  port: 2003
+  prefix: ops.dev.app.mysql_failover

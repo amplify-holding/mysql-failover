@@ -23,3 +23,8 @@ zookeeper:
 # failover has been completed on the MySQL side.
   client_data_znode: /client_data
   state_znode: /state
+
+graphite:
+  host: tigh.borg.lan
+  port: 2003
+  prefix: ops.dev.app.mysql_failover

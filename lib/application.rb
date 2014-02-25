@@ -1,9 +1,7 @@
-require 'json'
 require 'sinatra'
 require 'sinatra/json'
 require 'sinatra/config_file'
 require 'amplify/failover'
-require 'zk'
 require 'pp'
 
 @logger = Amplify::SLF4J['amplify-failover']
@@ -26,12 +24,24 @@ user_options = {}
 user_options[:env] = (ENV['ENV'] || '').downcase
 user_options[:sf_sandbox] = user_options[:env] == 'dev'
 
+begin
+  graphite_settings = settings.graphite
+rescue
+  graphite_settings = nil
+end
+graphite_connector = Amplify::Failover::GraphiteConnector.new(graphite_settings)
 
 WATCHDOG = case settings.mode
 when "mysql"
-  Amplify::Failover::MySQLWatchdog.new(settings.mysql, settings.zookeeper, logger: @logger)
+  Amplify::Failover::MySQLWatchdog.new(settings.mysql,
+                                       settings.zookeeper,
+                                       logger: @logger,
+                                       graphite: graphite_connector)
 when "application"
-  Amplify::Failover::AppWatchdog.new(settings.application, settings.zookeeper, logger: @logger)
+  Amplify::Failover::AppWatchdog.new(settings.application,
+                                     settings.zookeeper,
+                                     logger: @logger,
+                                     graphite: graphite_connector)
 end
 
 WATCHDOG.background!

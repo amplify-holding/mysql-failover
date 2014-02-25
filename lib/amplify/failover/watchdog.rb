@@ -3,8 +3,9 @@ module Failover
 
 class Watchdog
   def initialize ( zk_cfg, misc_cfg )
-    @logger                 = misc_cfg[:logger] || Logger.new($stderr)
-    @status                 = :starting
+    @logger   = misc_cfg[:logger] || Logger.new($stderr)
+    @graphite = misc_cfg[:graphite]
+    @status   = :starting
 
     # https://github.com/zk-ruby/zk/wiki/Events
     # use a Queue to coordinate between threads
