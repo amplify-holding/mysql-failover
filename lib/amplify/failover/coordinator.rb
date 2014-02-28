@@ -26,6 +26,9 @@ class Coordinator
     end
   end
 
+  def clean
+    ZK::Locker.cleanup(@zk)
+  end
 
 # Get an Array of all the master ids connected to ZooKeeper ephemerally
   def connected_master_ids
