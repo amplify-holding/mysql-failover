@@ -138,12 +138,10 @@ class Coordinator
     watch_state_znode
   end
 
-
   def server_id_exists? ( server_id )
     (self.connected_master_ids || []).include? server_id
   end
 
 end
-
 end
 end
