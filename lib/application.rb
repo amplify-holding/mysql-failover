@@ -29,7 +29,7 @@ begin
 rescue
   graphite_settings = nil
 end
-graphite_connector = Amplify::Failover::GraphiteConnector.new(graphite_settings)
+graphite_connector = Amplify::Failover::GraphiteConnector.new(graphite_settings, logger: @logger)
 
 WATCHDOG = case settings.mode
 when "mysql"

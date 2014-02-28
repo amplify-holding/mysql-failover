@@ -1,5 +1,6 @@
 require 'json'
 require 'zk'
+require 'logger'
 
 module Amplify
 module Failover
@@ -9,13 +10,15 @@ module Failover
 # and also to prefix metric names
 class GraphiteConnector
   attr_reader :graphite
-  def initialize ( graphite_config = {} )
+  def initialize ( graphite_config = {}, misc_cfg = {} )
     begin
       @graphite = Graphite.new( :host => graphite_config[:host],
                                 :port => graphite_config[:port] )
       @prefix = graphite_config[:prefix]
+      @logger = misc_cfg[:logger]
     rescue
       @graphite = nil
+      @logger = nil
     end
   end
 
@@ -28,7 +31,11 @@ class GraphiteConnector
   end
 
   def send_metrics ( metrics = {} )
-    @graphite.send_metrics(prefix_metrics(metrics)) if @graphite
+    begin
+      @graphite.send_metrics(prefix_metrics(metrics)) if @graphite
+    rescue => e
+      @logger.error "Unable to send metrics to graphite: #{e}" if @logger
+    end
   end
 
 
