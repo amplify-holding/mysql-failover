@@ -50,7 +50,7 @@ get '/status' do
   status = {
     status: (WATCHDOG.running? ? 'ok' : 'ko'),
     version: VERSION_INFO,
-#    worker: WORKER.status
+    worker: WATCHDOG.status
   }
   cache_control :private, :no_cache, :no_store
   json status
