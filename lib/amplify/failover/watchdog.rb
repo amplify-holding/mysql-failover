@@ -82,7 +82,9 @@ class Watchdog
     watch
     loop do
       queue_event = @queue.pop
-      process_queue_event(queue_event[:type], queue_event[:value], queue_event[:meta])
+      Amplify::Failover::GracefulTrap.critical_section(%w{INT TERM}, @logger) do
+        process_queue_event(queue_event[:type], queue_event[:value], queue_event[:meta])
+      end
     end
     @status = :stopped
   end
