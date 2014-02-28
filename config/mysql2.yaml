@@ -22,11 +22,11 @@ mysql:
 # if it takes more than this amount of time for the tracker
 # to replicate over, consider the current active master dead
 # and fail over
-  tracking_max_wait_secs: 60
+  tracking_max_wait_secs: 15
 
 # poll the tracking table every #{tracking_poll_secs} for the
 # replication tracker
-  tracking_poll_interval_secs: 5
+  tracking_poll_interval_secs: 2
 
 # WHEN THIS SERVER IS ACTIVE, the k/v pairs below client_data
 # will be persisted to the zookeeper.client_data_znode znode
