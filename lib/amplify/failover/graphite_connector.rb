@@ -14,12 +14,12 @@ class GraphiteConnector
     begin
       @graphite = Graphite.new( :host => graphite_config[:host],
                                 :port => graphite_config[:port] )
-      @prefix = graphite_config[:prefix]
-      @logger = misc_cfg[:logger]
     rescue
       @graphite = nil
-      @logger = nil
     end
+
+    @prefix = graphite_config[:prefix]
+    @logger = misc_cfg[:logger]
   end
 
   def prefix_metric ( metric )

@@ -2,11 +2,10 @@ require 'sequel'
 require 'logger'
 require 'jdbc/mysql'
 
-
 module Amplify
 module Failover
-class MySQLWatchdog < Watchdog
 
+class MySQLWatchdog < Watchdog
   attr_reader :status, :active_master_id
 
   def initialize ( mysql_cfg, zk_cfg, misc_cfg = {})
