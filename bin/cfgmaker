@@ -83,13 +83,17 @@ logger.level = options[:debug] ? Logger::DEBUG : Logger::INFO
 
 zk_cfg = config['zookeeper']
 ZK.logger = logger
-zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
 
 begin
+  zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
   client_data_json = zk.get(zk_cfg['client_data_znode']).first
 rescue => e
-  logger.fatal e
-  abort
+# always exit gracefully.  This is to prevent service startup
+# from failing in the event that zookeeper is unavailable.
+# In that case, the startup script should just use whatever
+# file is sitting on the filesystem.
+  logger.error e
+  exit 0
 end
 
 logger.debug "Found client_data: #{client_data_json}"
