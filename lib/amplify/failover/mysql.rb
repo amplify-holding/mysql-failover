@@ -102,6 +102,7 @@ class MySQLWatchdog < Watchdog
 # Public: Does this server need to step up to active master?
   def step_up? (new_active_server_id)
     # if this server was not the active master and now has become the active master, step up
+    @logger.debug "in step_up?: new_active_server_id: #{new_active_server_id}, @watcher_server_id: #{@watcher_server_id}, @active_master_id: #{@active_master_id}"
     @active_master_id != @watcher_server_id && new_active_server_id == @watcher_server_id
   end
 
@@ -266,7 +267,10 @@ class MySQLWatchdog < Watchdog
   def register_callbacks
     @zk_watch = @zk.register(@active_master_id_znode) do |event|
       znode = watch_active_master_id_znode
-      if event.node_changed? || event.node_created?
+      if event.node_deleted?
+        @logger.info "#{@active_master_id_znode} has been deleted."
+        @active_master_id = nil
+      elsif event.node_changed? || event.node_created?
         @logger.info "#{@active_master_id_znode} changed.  New value: #{znode[:value]}"
         @queue.push( :type  => :active_master_changed,
                      :value => znode[:value],
@@ -278,7 +282,12 @@ class MySQLWatchdog < Watchdog
 # Public: set watches and get initial values for watched znodes
   def watch
     znode = watch_active_master_id_znode
-    @active_master_id = znode.is_a?(Hash) ? normalize_server_id(znode[:value]) : nil
+    @logger.debug "in #watch: znode: #{znode.inspect}"
+    if znode.is_a?(Hash)
+      @active_master_id = znode[:value].empty? ? nil : normalize_server_id(znode[:value])
+    else
+      @active_master_id = nil
+    end
   end
 
   def normalize_server_id ( value )
