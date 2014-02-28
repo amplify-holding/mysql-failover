@@ -87,24 +87,24 @@ ZK.logger = logger
 begin
   zk = ZK.new(zk_cfg['hosts'].join(','), chroot: zk_cfg['chroot'])
   client_data_json = zk.get(zk_cfg['client_data_znode']).first
+  logger.debug "Found client_data: #{client_data_json}"
+  client_data = JSON.parse(client_data_json)
+
+  namespace = OpenStruct.new(client_data)
+  template = IO.read(options[:erb_file])
+  evaluated_template = eval_template(template, namespace)
+
+  if options[:output_file]
+    File.open(options[:output_file], 'w') {|f| f.write(evaluated_template) }
+  else
+    puts evaluated_template
+  end
+
 rescue => e
 # always exit gracefully.  This is to prevent service startup
 # from failing in the event that zookeeper is unavailable.
 # In that case, the startup script should just use whatever
 # file is sitting on the filesystem.
-  logger.error e
-  exit 0
+  logger.warn e
 end
 
-logger.debug "Found client_data: #{client_data_json}"
-client_data = JSON.parse(client_data_json)
-
-namespace = OpenStruct.new(client_data)
-template = IO.read(options[:erb_file])
-evaluated_template = eval_template(template, namespace)
-
-if options[:output_file]
-  File.open(options[:output_file], 'w') {|f| f.write(evaluated_template) }
-else
-  puts evaluated_template
-end
