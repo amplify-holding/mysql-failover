@@ -5,7 +5,7 @@ class Watchdog
   def initialize ( zk_cfg, misc_cfg )
     @logger   = misc_cfg[:logger] || Logger.new($stderr)
     @graphite = misc_cfg[:graphite]
-    @status   = :starting
+    @thread_status   = :starting
 
     # https://github.com/zk-ruby/zk/wiki/Events
     # use a Queue to coordinate between threads
@@ -55,13 +55,13 @@ class Watchdog
         @logger.info "Main thread running in background"
       rescue => e
         @logger.fatal 'Unrecoverable worker exception: ', e
-        @status = :stopped
+        @thread_status = :stopped
       end
     end
   end
 
   def running?
-    @status == :running
+    @thread_status == :running
   end
 
 # Public: Start the main watcher loop
@@ -75,7 +75,7 @@ class Watchdog
 #
   def run
     @logger.info "Running"
-    @status = :running
+    @thread_status = :running
 
     register_self_with_zk
     register_callbacks
@@ -86,7 +86,29 @@ class Watchdog
         process_queue_event(queue_event[:type], queue_event[:value], queue_event[:meta])
       end
     end
-    @status = :stopped
+    @thread_status = :stopped
+  end
+
+  def status
+    running? && zk_connected?
+  end
+
+  def zk_connected?
+    begin
+      @zk.connected?
+    rescue
+      false
+    end
+  end
+
+
+  def status_hash
+    {
+      status: (self.status ? 'ok' : 'ko'),
+      worker: @thread_status,
+      zk_connected: zk_connected?,
+      host: Socket.gethostbyname(Socket.gethostname).first
+    }
   end
 
   def register_callbacks

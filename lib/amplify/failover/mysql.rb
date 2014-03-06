@@ -63,6 +63,16 @@ class MySQLWatchdog < Watchdog
     run_sequel_migrations
   end
 
+  def mysql_connected?
+    begin
+      @db['select 1'].all
+      true
+    rescue
+      false
+    end
+  end
+
+
   def run_sequel_migrations
     # make sure only one node is running these
     lock = @zk.exclusive_locker('migrations_running')
@@ -159,6 +169,7 @@ class MySQLWatchdog < Watchdog
     client_data = JSON.generate(@client_data || {})
     @zk.create(@client_data_znode, client_data, or: :set, mode: :persistent)
   end
+
 
   def mysql_poll_for_tracker ( meta )
     total_time = 0
@@ -292,6 +303,14 @@ class MySQLWatchdog < Watchdog
   def normalize_server_id ( value )
     return nil if value.nil?
     value.is_a?(String) ? value : value.to_s
+  end
+
+  def status
+    super && mysql_connected?
+  end
+
+  def status_hash
+    super.merge(mysql_connected: mysql_connected?)
   end
 
 end

@@ -5,7 +5,7 @@ module Amplify
 module Failover
 class AppWatchdog < Watchdog
 
-  attr_reader :status, :failover_state
+  attr_reader :failover_state
 
   def initialize ( app_cfg, zk_cfg, misc_cfg = {})
     @state_znode            = zk_cfg['state_znode']       || '/state'
