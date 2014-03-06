@@ -47,18 +47,14 @@ end
 WATCHDOG.background!
 
 get '/status' do
-  status = {
-    status: (WATCHDOG.running? ? 'ok' : 'ko'),
-    version: VERSION_INFO,
-    worker: WATCHDOG.status
-  }
+  status = WATCHDOG.status_hash.merge( version: VERSION_INFO )
   cache_control :private, :no_cache, :no_store
   json status
 end
 
 get '/ping' do
   cache_control :private, :no_cache, :no_store
-  "PONG"
+  WATCHDOG.status ? "PONG" : "FAIL"
 end
 
 get '/start' do
