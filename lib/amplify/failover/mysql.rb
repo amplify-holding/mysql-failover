@@ -46,7 +46,7 @@ class MySQLWatchdog < Watchdog
     @graphite.send_metrics( "#{@watcher_server_id}.step_down" => 1)
     @logger.info "This server will become the passive master."
     mysql_read_only
-    #mysql_kill_connections
+    mysql_kill_connections
     mysql_insert_tracker meta
     @logger.info "Now in passive mode."
   end
