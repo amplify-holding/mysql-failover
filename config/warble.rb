@@ -1,3 +1,4 @@
+# coding: utf-8
 # Disable Rake-environment-task framework detection by uncommenting/setting to false
 # Warbler.framework_detection = false
 
@@ -23,16 +24,16 @@ Warbler::Config.new do |config|
   # in lib (and not otherwise excluded) then they need not be mentioned here.
   # JRuby and JRuby-Rack are pre-loaded in this list.  Be sure to include your
   # own versions if you directly set the value
-  config.java_libs += FileList["java/lib/*.jar"]
+  config.java_libs += FileList['java/lib/*.jar']
 
   # Loose Java classes and miscellaneous files to be included.
-  config.java_classes = FileList["java/classes/**.*"]
+  config.java_classes = FileList['java/classes/**.*']
 
   # One or more pathmaps defining how the java classes should be copied into
   # the archive. The example pathmap below accompanies the java_classes
   # configuration above. See http://rake.rubyforge.org/classes/String.html#M000017
   # for details of how to specify a pathmap.
-  config.pathmaps.java_classes << "%{java/classes/,}p"
+  config.pathmaps.java_classes << '%{java/classes/,}p'
 
   # Bundler support is built-in. If Warbler finds a Gemfile in the
   # project directory, it will be used to collect the gems to bundle
@@ -78,7 +79,7 @@ Warbler::Config.new do |config|
 
   # Name of the archive (without the extension). Defaults to the basename
   # of the project directory.
-  config.jar_name = "failover"
+  config.jar_name = 'failover'
 
   # Name of the MANIFEST.MF template for the war file. Defaults to a simple
   # MANIFEST.MF that contains the version of Warbler used to create the war file.
@@ -123,10 +124,10 @@ Warbler::Config.new do |config|
   # config.webxml.booter = :rails
 
   # Set JRuby to run in 1.9 mode.
-  config.webxml.jruby.compat.version = "1.9"
+  config.webxml.jruby.compat.version = '1.9'
 
   # Use SLF4J for application logging
-  config.webxml.jruby.rack.logging = "slf4j"
+  config.webxml.jruby.rack.logging = 'slf4j'
 
   # When using the :rack booter, "Rackup" script to use.
   # - For 'rackup.path', the value points to the location of the rackup

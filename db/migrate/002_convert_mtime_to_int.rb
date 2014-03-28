@@ -1,3 +1,4 @@
+# coding: utf-8
 Sequel.migration do
   up do
     alter_table :tracking do
@@ -18,4 +19,3 @@ Sequel.migration do
     end
   end
 end
-

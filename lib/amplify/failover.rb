@@ -1,6 +1,7 @@
+# coding: utf-8
 require 'simple-graphite'
 
-%w{version watchdog mysql app coordinator graphite_connector graceful_trap}.each do |lib|
+%w(version watchdog mysql app coordinator graphite_connector graceful_trap).each do |lib|
   require "amplify/failover/#{lib}"
 end
 
