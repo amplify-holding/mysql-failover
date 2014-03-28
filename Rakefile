@@ -43,7 +43,6 @@ task :bump, [:version] do |t, args|
   puts "Bumped patch version to #{args[:version]}"
 end
 
-
 desc 'Run Rubocop'
 task :rubocop do |t,args|
   Rubocop::RakeTask.new
