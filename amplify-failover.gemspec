@@ -30,5 +30,5 @@ Gem::Specification.new do |spec|
 
   # dev deps
   spec.add_development_dependency "bundler", "~> 1.3"
-  %w{rake warbler}.each { |gem| spec.add_development_dependency gem }
+  %w{rubocop rake warbler}.each { |gem| spec.add_development_dependency gem }
 end

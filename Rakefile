@@ -2,6 +2,7 @@ require "bundler/gem_tasks"
 require 'rake/clean'
 require 'warbler'
 require 'rack'
+require 'rubocop/rake_task'
 
 CLEAN.include('dist')
 CLEAN.include('*.jar')
@@ -20,7 +21,7 @@ end
 
 desc 'build WAR'
 #task :build => [:clean, :spec, 'spec:integration', :war]
-task :build => [:war]
+task :build => [:rubocop, :war]
 
 task :default => [:server]
 
@@ -40,4 +41,10 @@ task :bump, [:version] do |t, args|
   end
   File.open(fn, 'w') { |f| f.write(output.join) }
   puts "Bumped patch version to #{args[:version]}"
+end
+
+
+desc 'Run Rubocop'
+task :rubocop do |t,args|
+  Rubocop::RakeTask.new
 end

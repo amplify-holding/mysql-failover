@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# Encoding: utf-8
 
 require 'sequel'
 require 'sinatra'
@@ -21,19 +22,20 @@ MYSQL_USER     = 'failover'
 MYSQL_PASSWORD = 'failover'
 
 Jdbc::MySQL.load_driver
-DB = Sequel.connect(adapter:        'jdbc',
-                    uri:            "jdbc:mysql://#{MYSQL_HOST}:#{MYSQL_PORT}/failover",
-                    user:           MYSQL_USER,
-                    password:       MYSQL_PASSWORD,
-                    sql_log_level:  :debug,
-                    logger:         LOGGER )
-
+DB = Sequel.connect(
+    adapter:        'jdbc',
+    uri:            "jdbc:mysql://#{MYSQL_HOST}:#{MYSQL_PORT}/failover",
+    user:           MYSQL_USER,
+    password:       MYSQL_PASSWORD,
+    sql_log_level:  :debug,
+    logger:         LOGGER
+)
 
 get '/' do
   DB['select 1'].all
-  json :mysql => {
-      :host => DB['SELECT @@hostname hostname'].first[:hostname],
-      :port => DB['SELECT @@port port'].first[:port]
-    }
+  json mysql: {
+    host: DB['SELECT @@hostname hostname'].first[:hostname],
+    port: DB['SELECT @@port port'].first[:port]
+  }
 
 end
