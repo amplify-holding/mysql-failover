@@ -27,3 +27,4 @@ bundle exec rake build
 
 [[ -d dist ]] || mkdir dist
 mv failover.war dist/failover-${BUILD_NUMBER}.war
+mv pkg/failover*.gem pkg/failover-${BUILD_NUMBER}.gem
