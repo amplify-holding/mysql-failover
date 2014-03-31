@@ -34,7 +34,7 @@ task :bump, [:version] do |t, args|
 
   output = contents.map do |line|
     if line =~ version_regex
-      line.gsub(version_regex, sprintf('\1VERSION = "\2.\3.%s"', args[:version]))
+      line.gsub(version_regex, sprintf('\1VERSION = \'\2.\3.%s\'', args[:version]))
     else
       line
     end
