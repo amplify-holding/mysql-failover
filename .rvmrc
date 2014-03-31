@@ -1,1 +1,1 @@
-rvm use jruby-1.7.10@amplify-failover --install --create
+rvm use jruby-1.7.11@amplify-failover --install --create

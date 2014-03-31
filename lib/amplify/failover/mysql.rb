@@ -62,6 +62,16 @@ module Amplify
                              sql_log_level:  :debug,
                              logger:         @logger)
 
+        # rubocop:disable LineLength
+        # http://sequel.jeremyevans.net/rdoc-plugins/files/lib/sequel/extensions/connection_validator_rb.html
+        # This extension checks the validity of a connection before querying.
+        # This is here to avoid having to explicitly reconnect every time a query is executed
+        # it isn't free, but this service only does a handful of queries
+        # rubocop:enable LineLength
+
+        @db.extension(:connection_validator)
+
+        @db.pool.connection_validation_timeout = -1
         run_sequel_migrations
       end
 
@@ -193,12 +203,18 @@ module Amplify
         @db[:tracking]
           .where(version: meta.version)
           .where('mtime >= ?', meta.mtime).count > 0
+      rescue Sequel::DatabaseError, Sequel::DatabaseConnectionError => e
+        @logger.error e
+        false
       end
 
       def mysql_insert_tracker(meta)
         @db[:tracking].insert(created_at: Time.now,
                               version: meta.version,
                               mtime: meta.mtime)
+      rescue Sequel::DatabaseError, Sequel::DatabaseConnectionError => e
+        @logger.error e
+        false
       end
 
       # kill off any connections except for self and slave processes
@@ -219,6 +235,9 @@ module Amplify
             end
           end
         end
+      rescue Sequel::DatabaseError, Sequel::DatabaseConnectionError => e
+        @logger.error e
+        false
       end
 
     # run some code with the MySQL slave threads stopped
@@ -233,10 +252,16 @@ module Amplify
         @logger.info 'Returning slave threads back to their previous state.'
         @db['START SLAVE SQL_THREAD'].update if slave_status[:Slave_SQL_Running] == 'Yes'
         @db['START SLAVE IO_THREAD'].update  if slave_status[:Slave_IO_Running]  == 'Yes'
+      rescue Sequel::DatabaseError, Sequel::DatabaseConnectionError => e
+        @logger.error e
+        false
       end
 
       def mysql_read_only(read_only = true)
         @db['SET GLOBAL read_only = ?', read_only ? 1 : 0].update
+      rescue Sequel::DatabaseError, Sequel::DatabaseConnectionError => e
+        @logger.error e
+        false
       end
 
     # Public: Register ephemeral znode for this host
