@@ -1,2 +1,5 @@
 rvm use jruby-1.7.11@amplify-failover --install --create
+rvm_autoinstall_bundler_flag=0
+
+# warbler has some problems with bundler > 1.9
 rvm gemset install bundler -v1.9.9
