@@ -6,7 +6,6 @@ if [ -s "$HOME/.rvm/scripts/rvm" ]; then
   source .rvmrc > /dev/null
 fi
 
-gem install bundler --version '< 1.10'
 bundle check || bundle install
 
 bundle exec rake $@
