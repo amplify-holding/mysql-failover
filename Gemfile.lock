@@ -1,0 +1,75 @@
+PATH
+  remote: .
+  specs:
+    failover (0.0.1)
+      gli
+      jdbc-mysql
+      sequel
+      simple-graphite
+      sinatra
+      sinatra-contrib
+      zk (~> 1.9.5)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ast (2.2.0)
+    backports (3.6.7)
+    gli (2.13.4)
+    jdbc-mysql (5.1.37)
+    jruby-jars (1.7.24)
+    jruby-rack (1.1.19)
+    multi_json (1.11.2)
+    parser (2.3.0.1)
+      ast (~> 2.2)
+    powerpack (0.1.1)
+    rack (1.6.4)
+    rack-protection (1.5.3)
+      rack
+    rack-test (0.6.3)
+      rack (>= 1.0)
+    rainbow (2.0.0)
+    rake (10.5.0)
+    rubocop (0.36.0)
+      parser (>= 2.3.0.0, < 3.0)
+      powerpack (~> 0.1)
+      rainbow (>= 1.99.1, < 3.0)
+      ruby-progressbar (~> 1.7)
+    ruby-progressbar (1.7.5)
+    rubyzip (1.1.7)
+    sequel (4.30.0)
+    simple-graphite (2.1.0)
+    sinatra (1.4.6)
+      rack (~> 1.4)
+      rack-protection (~> 1.4)
+      tilt (>= 1.3, < 3)
+    sinatra-contrib (1.4.6)
+      backports (>= 2.0)
+      multi_json
+      rack-protection
+      rack-test
+      sinatra (~> 1.4.0)
+      tilt (>= 1.3, < 3)
+    slyphon-log4j (1.2.15)
+    slyphon-zookeeper_jar (3.3.5-java)
+    tilt (2.0.2)
+    warbler (1.4.9)
+      jruby-jars (>= 1.5.6, < 2.0)
+      jruby-rack (>= 1.1.1, < 1.3)
+      rake (>= 0.9.6)
+      rubyzip (>= 0.9, < 1.2)
+    zk (1.9.6)
+      zookeeper (~> 1.4.0)
+    zookeeper (1.4.11-java)
+      slyphon-log4j (= 1.2.15)
+      slyphon-zookeeper_jar (= 3.3.5)
+
+PLATFORMS
+  java
+
+DEPENDENCIES
+  bundler (< 1.10)
+  failover!
+  rake
+  rubocop
+  warbler

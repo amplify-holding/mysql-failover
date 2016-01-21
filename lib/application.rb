@@ -3,13 +3,14 @@ require 'sinatra'
 require 'sinatra/json'
 require 'sinatra/config_file'
 require 'amplify/failover'
+require 'logger'
 require 'pp'
 
 def config_filename
   ENV['FAILOVER_CONFIG'] || java.lang.System.getProperty('failover.config', 'config/failover.yaml')
 end
 
-@logger = Amplify::SLF4J['amplify-failover']
+@logger = Logger.new($stdout)
 @logger.level = ::Logger::Severity::DEBUG
 
 @logger.info "Loading config from #{config_filename}"

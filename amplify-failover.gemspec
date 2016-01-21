@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Amplify::Failover::VERSION
   spec.authors       = ["Aaron Brown"]
   spec.email         = ["abrown@amplify.com"]
-  spec.description   = %q{Failover scripts and utilities for Amplify databases}
-  spec.summary       = %q{Failover scripts and utilities for Amplify databases}
+  spec.description   = %q{MySQL master/master failover using ZooKeeper for coordination}
+  spec.summary       = %q{MySQL master/master failover using ZooKeeper for coordination}
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -19,7 +19,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   %w{sequel gli sinatra sinatra-contrib simple-graphite}.each { |gem| spec.add_dependency gem }
-  spec.add_dependency 'amplify-slf4j', '~> 0.0.4'
   spec.add_dependency 'zk', '~> 1.9.5'
 
   # this thing needs to run under both jruby and MRI, if possible
