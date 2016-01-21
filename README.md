@@ -2,9 +2,7 @@
 
 ## Overview
 
-![Architecture Diagram](https://git.amplify.com/projects/SYSENG/repos/amplify-failover/browse/doc/img/mysql_zk_failover.png?raw)
-
-More comprehensive documentation may be available at [MySQL Failover w/Zookeeper](https://amplify-jira.atlassian.net/wiki/pages/viewpage.action?pageId=40829448)
+![Architecture Diagram](https://raw.githubusercontent.com/amplify-holding/mysql-failover/master/doc/img/mysql_zk_failover.png)
 
 ## Running it
 
